@@ -28,24 +28,72 @@ module ANN
     end
     attr_reader :learning, :momentum, :decay, :elimination, :threshold, :minimum
 
-    def run
+    def run(inputs, targets, maxEpoch, pause)
+      maxEpoch.times do
+        puts "Epoch: #{@epoch}"
 
+        inputs.zip(targets).each do |input, target|
+          output = propagate input
+          backpropagate target
+          puts "#{input}: #{output}"
+
+        end
+
+        gets if @epoch % pause == 0
+        @epoch += 1
+
+      end
 
     end
 
-    def propagate
+    def propagate(inputs)
+      @generations[0].zip(inputs).each do |neuron, input|
+        neuron.output = input
+        neuron.terminals.each do |synapse|
+          synapse.transfer
 
+        end
+
+      end
+      @generations[1...@generations.length].each do |generation|
+        generation.each do |neuron|
+          neuron.activate
+
+        end
+
+      end
+
+      outputs = []
+      @generations[-1].each do |neuron|
+        outputs << neuron.output
+
+      end
+      outputs
 
     end
 
-    def backpropagate
+    def backpropagate(targets)
+      @generations[-1].zip(targets).each do |neuron, target|
+        neuron.error = target - neuron.output
+        neuron.error = 0 if neuron.error.abs <= @minimum
 
+      end
+
+      @generations[0...@generations.length - 1].reverse.each do |generation|
+        generation.each do |neuron|
+          neuron.learn
+
+        end
+
+      end
+
+      @bias.learn
 
     end
 
     def completeConnection(generation, otherGeneration)
-      generation.each do |neuron|
-        otherGeneration.each do |otherNeuron|
+      @generations[generation].each do |neuron|
+        @generations[otherGeneration].each do |otherNeuron|
           Synapse.new neuron, otherNeuron, @weights[@weightIndex += 1], self
 
         end
@@ -89,7 +137,8 @@ module ANN
       @prevError = 0
 
     end
-    attr_reader :dendrites, :terminals, :output, :error, :prevError
+    attr_accessor :output, :error
+    attr_reader :dendrites, :terminals, :prevError
 
 
     def activate
@@ -168,7 +217,8 @@ module ANN
       # commented lines to be used in the effect of hormones on artificial neural networks and multi-learning
 
     end
-    attr_reader :input, :weight
+    # attr_accessor :hormone
+    attr_reader :input, :weight, :terminal, :dendrite
 
     def transfer
       @input = @terminal.output
@@ -185,3 +235,30 @@ module ANN
   # always use target - actual for error calculation, not actual - target
 
 end
+
+include ANN
+
+weights = []
+8.times do
+  weights << rand
+end
+
+test = Network.new [2, 2, 1], weights, learning: 0.05, minimum: 0.001
+test.completeConnection 0, 1
+test.completeConnection 1, 2
+
+inputs = [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1]
+]
+
+targets = [
+    [0],
+    [1],
+    [1],
+    [0]
+]
+
+test.run inputs, targets, 2_000_000, 1_000_000
