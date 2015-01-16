@@ -202,7 +202,7 @@ module ANN
       end
 
       @output = (if type.nil?
-                   sigmoid sum
+                   hyperbolic sum
                  else
                    threshold sum
                  end)
@@ -218,13 +218,18 @@ module ANN
 
       @prevError = @error
 
-      @error = derivative(@output) * sum
+      @error = derivativeHyperbolic(@output) * sum
       @error = 0 if @error.abs < @net.minimum
 
     end
 
     def sigmoid(value)
       1 / (1 + Math::E ** -value)
+
+    end
+
+    def hyperbolic(value)
+      (Math::E ** (2 * value) - 1)/(Math::E ** (2 * value) + 1)
 
     end
 
@@ -241,8 +246,13 @@ module ANN
 
     end
 
-    def derivative(value)
+    def derivativeSigmoid(value)
       value * (1 - value)
+
+    end
+
+    def derivativeHyperbolic(value)
+      1 - value ** 2
 
     end
 
