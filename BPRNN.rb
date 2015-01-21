@@ -10,7 +10,10 @@ $AUTHOR = 'Coleman'
 #     neuron error --- sum(output_delta * output_weight) * sigma_prime
 #     output error --- sigma_prime * (target - actual)
 #
-# CE cost-
+# CE or ME cost-
 #     weight update --- input * output_delta
 #     neuron error --- sum(output_delta * output_weight) / num_output
 #     output error --- target - actual
+#
+# decay with a lambda hyperparameter in the weight update and no offset in the cost function. No cost function
+# momentum with a mu hyperparameter
